@@ -8,12 +8,14 @@
 #include "AssetToolsModule.h"
 #include "AssetViewUtils.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "SlateWidgets/AdvancedDeletionWidget.h"
 
 #define LOCTEXT_NAMESPACE "FSuperManagerModule"
 
 void FSuperManagerModule::StartupModule()
 {
 	InitCBMenuExtention();
+	RegisterAdvancedDeletionTab();
 }
 
 void FSuperManagerModule::ShutdownModule()
@@ -74,6 +76,14 @@ void FSuperManagerModule::AddCBMenuEntry(class FMenuBuilder& MenuBuilder)
 		FText::FromString(TEXT("Safely delete all empty folders and unused assets")),
 		FSlateIcon(),
 		FExecuteAction::CreateRaw(this, &FSuperManagerModule::OnDeleteUnusedAssetsAndEmptyFoldersButtonCLicked)
+	);
+
+	MenuBuilder.AddMenuEntry
+	(
+		FText::FromString(TEXT("Advanced Deletion")),
+		FText::FromString(TEXT("List assets by specific conditions in a tab for deleting")),
+		FSlateIcon(),
+		FExecuteAction::CreateRaw(this, &FSuperManagerModule::OnAdvancedDeletionButtonCLicked)
 	);
 }
 
@@ -218,6 +228,11 @@ void FSuperManagerModule::OnDeleteUnusedAssetsAndEmptyFoldersButtonCLicked()
 	OnDeleteEmptyFoldersButtonCLicked();
 }
 
+void FSuperManagerModule::OnAdvancedDeletionButtonCLicked()
+{
+	FGlobalTabmanager::Get()->TryInvokeTab(FName("AdvancedDeletion"));
+}
+
 void FSuperManagerModule::FixupRedirectors()
 {
 	// Array for fillin object redirectors
@@ -265,8 +280,69 @@ void FSuperManagerModule::FixupRedirectors()
 		AssetToolsModule.Get().FixupReferencers(Redirectors);
 	}
 }
+#pragma endregion
 
+#pragma region CustomEditorTab
+void FSuperManagerModule::RegisterAdvancedDeletionTab()
+{
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("AdvancedDeletion"), FOnSpawnTab::CreateRaw(this, &FSuperManagerModule::OnSpawnAdvancedDeletionTab)).SetDisplayName(FText::FromString(TEXT("Advanced Deletion")));
+}
 
+TSharedRef<SDockTab> FSuperManagerModule::OnSpawnAdvancedDeletionTab(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return
+		SNew(SDockTab).TabRole(ETabRole::NomadTab)
+		[
+			SNew(SAdvancedDeletionWidget)
+			 .AssetsDataArray(GetAllAssetDataUnderSelectedFolder())
+		];
+}
+
+TArray<TSharedPtr<FAssetData>> FSuperManagerModule::GetAllAssetDataUnderSelectedFolder()
+{
+	TArray<TSharedPtr<FAssetData>> AvailableAssetsData;
+
+	TArray<FString> AssetsNames = UEditorAssetLibrary::ListAssets(SelectedFolderPath[0]);
+
+	for (const FString& AssetName : AssetsNames)
+	{
+		if (AssetName.Contains(TEXT("Collections")) || AssetName.Contains(TEXT("Developers"))) { continue; }
+
+		if (UEditorAssetLibrary::DoesAssetExist(AssetName) == false) { continue; }
+
+		TArray<FString> AssetsReferences = UEditorAssetLibrary::FindPackageReferencersForAsset(AssetName);
+
+		//if (AssetsReferences.Num() == 0)
+		{
+			const FAssetData Data = UEditorAssetLibrary::FindAssetData(AssetName);
+
+			AvailableAssetsData.Add(MakeShared<FAssetData>(Data));
+		}
+	}
+
+	return AvailableAssetsData;
+}
+
+#pragma endregion
+
+#pragma region ProcessDataForAdvancedDeletionWidget
+bool FSuperManagerModule::DeleteSingleAsset(const FAssetData& AssetDataToDelete)
+{
+	TArray<FAssetData> AssetDataToDeleteArray;
+	AssetDataToDeleteArray.Add(AssetDataToDelete);
+
+	return ObjectTools::DeleteAssets(AssetDataToDeleteArray) > 0;
+}
+
+int32 FSuperManagerModule::DeleteMultipleAssets(const TArray<FAssetData>& AssetDataToDeleteArray)
+{
+	if (AssetDataToDeleteArray.Num() == 0)
+	{
+		return 0;
+	}
+
+	return ObjectTools::DeleteAssets(AssetDataToDeleteArray);
+}
 #pragma endregion
 
 #undef LOCTEXT_NAMESPACE
