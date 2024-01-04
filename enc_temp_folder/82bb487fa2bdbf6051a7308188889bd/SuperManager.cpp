@@ -20,8 +20,6 @@ void FSuperManagerModule::StartupModule()
 
 void FSuperManagerModule::ShutdownModule()
 {
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(FName("AdvancedDeletion"));
-
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 }
@@ -298,8 +296,7 @@ TSharedRef<SDockTab> FSuperManagerModule::OnSpawnAdvancedDeletionTab(const FSpaw
 		SNew(SDockTab).TabRole(ETabRole::NomadTab)
 		[
 			SNew(SAdvancedDeletionWidget)
-				.AssetsDataArray(GetAllAssetDataUnderSelectedFolder())
-				.CurrentSelectedFolder(SelectedFolderPath[0])
+			 .AssetsDataArray(GetAllAssetDataUnderSelectedFolder())
 		];
 }
 
@@ -402,14 +399,6 @@ void FSuperManagerModule::ListSameNameAssets(const TArray<TSharedPtr<FAssetData>
 		}
 	}
 
-}
-
-void FSuperManagerModule::SyncCBToClickedAsset(const FString& ClickedAssetPath)
-{
-	TArray<FString> AssetsPathToSyncArray;
-	AssetsPathToSyncArray.Add(ClickedAssetPath);
-
-	UEditorAssetLibrary::SyncBrowserToObjects(AssetsPathToSyncArray);
 }
 
 #pragma endregion

@@ -9,8 +9,6 @@ class SAdvancedDeletionWidget : public SCompoundWidget
 	SLATE_BEGIN_ARGS(SAdvancedDeletionWidget) {}
 	
 	SLATE_ARGUMENT(TArray<TSharedPtr<FAssetData>>,AssetsDataArray)
-
-	SLATE_ARGUMENT(FString,CurrentSelectedFolder)
 	
 	SLATE_END_ARGS()
 
@@ -37,7 +35,6 @@ private:
 
 #pragma region EventsMethods
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay, const TSharedRef<STableViewBase>& OwnerTable);
-	void OnRowMouseButtonClick(TSharedPtr<FAssetData> ClickedData);
 
 	TSharedRef<SWidget> OnGenerateComboBoxWidget(TSharedPtr<FString> SourceItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> SelectedOption, ESelectInfo::Type InSelectInfo);

@@ -19,7 +19,6 @@ void SAdvancedDeletionWidget::Construct(const FArguments& InArgs)
 	CheckBoxesArray.Empty();
 	SelectedAssetsToDelete.Empty();
 
-	ComboBoxSourceItems.Empty();
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListALL));
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListUnused));
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListSameName));
@@ -27,7 +26,8 @@ void SAdvancedDeletionWidget::Construct(const FArguments& InArgs)
 	AssetsDataUnderSelectedFolder = InArgs._AssetsDataArray;
 	DisplayedAssetsData = AssetsDataUnderSelectedFolder;
 
-	FSlateFontInfo TitleTextFont = GetEmbossedTextFont(30.f);
+	FSlateFontInfo TitleTextFont = FCoreStyle::Get().GetFontStyle(FName("EmbossedText"));
+	TitleTextFont.Size = 30;
 
 	ChildSlot
 		[
@@ -54,19 +54,6 @@ void SAdvancedDeletionWidget::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							ConstructComboBox()
-						]
-
-						// help text
-						+ SHorizontalBox::Slot()
-						.FillWidth(0.6f)
-						[
-							ConstructTextBlock(TEXT("Specify the listing condition in DDL. Left mouse click to go to asset location"), GetEmbossedTextFont(8.0f), FColor::Green, ETextJustify::Center)
-						]
-
-						+ SHorizontalBox::Slot()
-						.FillWidth(0.1f)
-						[
-							ConstructTextBlock(TEXT("Current Folder \n") + InArgs._CurrentSelectedFolder, GetEmbossedTextFont(8.0f), FColor::Green, ETextJustify::Center)
 						]
 				]
 
@@ -113,8 +100,7 @@ TSharedRef<SListView <TSharedPtr<FAssetData>>> SAdvancedDeletionWidget::Construc
 	ConstructedAssetsListView = SNew(SListView <TSharedPtr<FAssetData>>)
 		.ItemHeight(24.0f)
 		.ListItemsSource(&DisplayedAssetsData)
-		.OnGenerateRow(this, &SAdvancedDeletionWidget::OnGenerateRowForList)
-		.OnMouseButtonClick(this, &SAdvancedDeletionWidget::OnRowMouseButtonClick);
+		.OnGenerateRow(this, &SAdvancedDeletionWidget::OnGenerateRowForList);
 
 	return ConstructedAssetsListView.ToSharedRef();
 }
@@ -152,8 +138,7 @@ TSharedRef<STextBlock> SAdvancedDeletionWidget::ConstructTextBlock(const FString
 		.Text(FText::FromString(TextContent))
 		.Font(Font)
 		.ColorAndOpacity(Color)
-		.Justification(Justify)
-		.AutoWrapText(true);
+		.Justification(Justify);
 
 	return ConstructedTextBlock;
 }
@@ -256,14 +241,6 @@ TSharedRef<ITableRow> SAdvancedDeletionWidget::OnGenerateRowForList(TSharedPtr<F
 	return ListViewRowWidget;
 }
 
-void SAdvancedDeletionWidget::OnRowMouseButtonClick(TSharedPtr<FAssetData> ClickedData)
-{
-	FSuperManagerModule& SuperManagerModule = FModuleManager::LoadModuleChecked<FSuperManagerModule>(TEXT("SuperManager"));
-	SuperManagerModule.SyncCBToClickedAsset(ClickedData->GetSoftObjectPath().ToString());
-
-	DebugHeader::Print(ClickedData->AssetName.ToString(), FColor::Cyan);
-}
-
 TSharedRef<SWidget> SAdvancedDeletionWidget::OnGenerateComboBoxWidget(TSharedPtr<FString> SourceItem)
 {
 	TSharedRef<STextBlock> ConstructedComboText =
@@ -283,7 +260,7 @@ void SAdvancedDeletionWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Sel
 	{
 		DisplayedAssetsData = AssetsDataUnderSelectedFolder;
 	}
-	else if (*SelectedOption.Get() == ListUnused)
+	else if(*SelectedOption.Get() == ListUnused)
 	{
 		SuperManagerModule.ListUnusedAssets(AssetsDataUnderSelectedFolder, DisplayedAssetsData);
 	}

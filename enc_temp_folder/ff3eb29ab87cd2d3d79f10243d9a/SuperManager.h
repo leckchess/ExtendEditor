@@ -46,7 +46,6 @@ public:
 	int32 DeleteMultipleAssets(const TArray<FAssetData>& AssetDataToDeleteArray);
 	void ListUnusedAssets(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter, TArray<TSharedPtr<FAssetData>>& OutUnusedAssetData);
 	void ListSameNameAssets(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter, TArray<TSharedPtr<FAssetData>>& OutSameNameAssetData);
-	void SyncCBToClickedAsset(const FString& ClickedAssetPath);
 
 #pragma endregion
 
